@@ -1,0 +1,14 @@
+services:
+  merchant-demo:
+    build:
+      context: ..
+      dockerfile: demo/Dockerfile
+    ports:
+      - "3000:3000"
+    environment:
+      - NOPAYN_API_KEY=${NOPAYN_API_KEY}
+      - NOPAYN_MERCHANT_ID=${NOPAYN_MERCHANT_ID}
+      - NOPAYN_BASE_URL=${NOPAYN_BASE_URL:-https://api.nopayn.co.uk}
+      - PUBLIC_URL=${PUBLIC_URL:-http://localhost:3000}
+      - PORT=3000
+    restart: unless-stopped

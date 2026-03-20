@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>NoPayn SDK — Merchant Demo</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+      background: #f4f5f7; color: #1a1a2e; min-height: 100vh;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .card {
+      background: #fff; border-radius: 16px; box-shadow: 0 4px 24px rgba(0,0,0,.08);
+      max-width: 420px; width: 100%; padding: 40px; text-align: center;
+    }
+    .badge {
+      display: inline-block; background: #fef2f2; color: #dc2626;
+      font-size: 12px; font-weight: 600; letter-spacing: .5px; text-transform: uppercase;
+      padding: 4px 12px; border-radius: 999px; margin-bottom: 16px;
+    }
+    h1 { font-size: 24px; margin-bottom: 8px; }
+    .desc { color: #64748b; font-size: 14px; margin-bottom: 28px; line-height: 1.5; }
+    .product {
+      display: flex; align-items: center; gap: 16px;
+      background: #f8fafc; border-radius: 12px; padding: 16px; margin-bottom: 24px; text-align: left;
+    }
+    .product-icon {
+      width: 56px; height: 56px; background: linear-gradient(135deg, #dc2626, #ef4444);
+      border-radius: 12px; display: flex; align-items: center; justify-content: center;
+      font-size: 28px; flex-shrink: 0;
+    }
+    .product-info { flex: 1; }
+    .product-name { font-weight: 600; font-size: 16px; margin-bottom: 2px; }
+    .product-price { color: #dc2626; font-weight: 700; font-size: 20px; }
+    .form-row { display: flex; gap: 8px; margin-bottom: 16px; }
+    .form-group { flex: 1; text-align: left; }
+    .form-group label {
+      display: block; font-size: 12px; font-weight: 600; color: #64748b;
+      margin-bottom: 4px; text-transform: uppercase; letter-spacing: .3px;
+    }
+    select, input[type="number"] {
+      width: 100%; padding: 10px 12px; border: 1.5px solid #e2e8f0;
+      border-radius: 8px; font-size: 14px; background: #fff;
+      transition: border-color .15s;
+    }
+    select:focus, input:focus { outline: none; border-color: #dc2626; }
+    .btn {
+      display: block; width: 100%; padding: 14px;
+      background: linear-gradient(135deg, #dc2626, #ef4444);
+      color: #fff; border: none; border-radius: 10px;
+      font-size: 16px; font-weight: 600; cursor: pointer;
+      transition: transform .1s, box-shadow .15s;
+    }
+    .btn:hover { transform: translateY(-1px); box-shadow: 0 4px 16px rgba(220,38,38,.4); }
+    .btn:active { transform: translateY(0); }
+    .powered {
+      margin-top: 24px; font-size: 12px; color: #94a3b8;
+    }
+    .powered a { color: #dc2626; text-decoration: none; font-weight: 600; }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <div class="badge">Ruby SDK Demo</div>
+    <h1>NoPayn Checkout</h1>
+    <p class="desc">This merchant demo uses the <strong>nopayn</strong> Ruby gem to create a payment and redirect to the Hosted Payment Page.</p>
+
+    <div class="product">
+      <div class="product-icon">&#9889;</div>
+      <div class="product-info">
+        <div class="product-name">NoPayn Test Product</div>
+        <div class="product-price" id="price-display">&euro;9.95</div>
+      </div>
+    </div>
+
+    <form method="POST" action="/pay">
+      <div class="form-row">
+        <div class="form-group">
+          <label for="amount">Amount</label>
+          <input type="number" id="amount" name="amount" value="9.95" min="0.01" step="0.01" />
+        </div>
+        <div class="form-group">
+          <label for="currency">Currency</label>
+          <select id="currency" name="currency">
+            <option value="EUR" selected>EUR</option>
+            <option value="GBP">GBP</option>
+            <option value="USD">USD</option>
+            <option value="NOK">NOK</option>
+            <option value="SEK">SEK</option>
+            <option value="DKK">DKK</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label for="locale">Language</label>
+          <select id="locale" name="locale">
+            <option value="en-GB" selected>English</option>
+            <option value="de-DE">Deutsch</option>
+            <option value="nl-NL">Nederlands</option>
+            <option value="sv-SE">Svenska</option>
+            <option value="no-NO">Norsk</option>
+            <option value="da-DK">Dansk</option>
+          </select>
+        </div>
+      </div>
+      <button type="submit" class="btn">Pay with NoPayn</button>
+    </form>
+
+    <p class="powered">Powered by <a href="https://costplus.io" target="_blank">Cost+</a> &middot; <a href="https://github.com/NoPayn/ruby-sdk" target="_blank">View SDK on GitHub</a></p>
+  </div>
+
+  <script>
+    var symbols = { EUR: '\u20AC', GBP: '\u00A3', USD: '$', NOK: 'kr', SEK: 'kr', DKK: 'kr' };
+    var amt = document.getElementById('amount');
+    var cur = document.getElementById('currency');
+    var display = document.getElementById('price-display');
+    function update() {
+      display.textContent = (symbols[cur.value] || cur.value) + parseFloat(amt.value || 0).toFixed(2);
+    }
+    amt.addEventListener('input', update);
+    cur.addEventListener('change', update);
+  </script>
+</body>
+</html>

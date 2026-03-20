@@ -1,0 +1,8 @@
+*.gem
+.bundle/
+vendor/
+coverage/
+Gemfile.lock
+pkg/
+tmp/
+.byebug_history
