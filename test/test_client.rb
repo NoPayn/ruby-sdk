@@ -35,6 +35,18 @@ class TestClient < Minitest::Test
     ]
   }.freeze
 
+  TRANSACTION_RESPONSE = {
+    "id"                => "uuid-txn-1",
+    "amount"            => 1295,
+    "currency"          => "EUR",
+    "payment_method"    => "credit-card",
+    "payment_url"       => "https://api.nopayn.co.uk/redirect/uuid-txn-1/to/payment/",
+    "status"            => "completed",
+    "created"           => "2026-01-01T12:00:00Z",
+    "modified"          => "2026-01-01T12:01:00Z",
+    "expiration_period" => "PT30M"
+  }.freeze
+
   REFUND_RESPONSE = {
     "id"     => "uuid-refund-1",
     "amount" => 500,
@@ -165,6 +177,90 @@ class TestClient < Minitest::Test
 
     order = client.get_order("test")
     assert_equal "uuid-order-1", order.id
+  end
+
+  def test_capture_transaction
+    stub_request(:post, "#{BASE_URL}/v1/orders/uuid-order-1/transactions/uuid-txn-1/captures/")
+      .with(
+        headers: { "Content-Type" => "application/json", "Accept" => "application/json" }
+      )
+      .to_return(status: 200, body: JSON.generate(TRANSACTION_RESPONSE), headers: { "Content-Type" => "application/json" })
+
+    txn = @client.capture_transaction("uuid-order-1", "uuid-txn-1")
+
+    assert_equal "uuid-txn-1", txn.id
+    assert_equal 1295, txn.amount
+    assert_equal "EUR", txn.currency
+    assert_equal "credit-card", txn.payment_method
+    assert_equal "completed", txn.status
+  end
+
+  def test_void_transaction
+    stub_request(:post, "#{BASE_URL}/v1/orders/uuid-order-1/transactions/uuid-txn-1/voids/amount/")
+      .with(
+        headers: { "Content-Type" => "application/json", "Accept" => "application/json" },
+        body: hash_including("amount" => 500, "description" => "Customer requested void")
+      )
+      .to_return(status: 200, body: JSON.generate(TRANSACTION_RESPONSE), headers: { "Content-Type" => "application/json" })
+
+    txn = @client.void_transaction("uuid-order-1", "uuid-txn-1", amount: 500, description: "Customer requested void")
+
+    assert_equal "uuid-txn-1", txn.id
+    assert_equal 1295, txn.amount
+    assert_equal "credit-card", txn.payment_method
+  end
+
+  def test_void_transaction_default_description
+    stub_request(:post, "#{BASE_URL}/v1/orders/uuid-order-1/transactions/uuid-txn-1/voids/amount/")
+      .with(body: hash_including("amount" => 500, "description" => ""))
+      .to_return(status: 200, body: JSON.generate(TRANSACTION_RESPONSE), headers: { "Content-Type" => "application/json" })
+
+    txn = @client.void_transaction("uuid-order-1", "uuid-txn-1", amount: 500)
+    assert_equal "uuid-txn-1", txn.id
+  end
+
+  def test_create_order_with_order_lines
+    order_lines = [
+      {
+        type: "physical",
+        name: "Widget",
+        quantity: 2,
+        amount: 500,
+        currency: "EUR",
+        vat_percentage: 19,
+        merchant_order_line_id: "LINE-001"
+      }
+    ]
+
+    stub_request(:post, "#{BASE_URL}/v1/orders/")
+      .with(body: hash_including(
+        "amount" => 1000,
+        "currency" => "EUR",
+        "order_lines" => [hash_including("type" => "physical", "name" => "Widget", "quantity" => 2)]
+      ))
+      .to_return(status: 201, body: JSON.generate(ORDER_RESPONSE), headers: { "Content-Type" => "application/json" })
+
+    order = @client.create_order(amount: 1000, currency: "EUR", order_lines: order_lines)
+
+    assert_equal "uuid-order-1", order.id
+    assert_requested :post, "#{BASE_URL}/v1/orders/"
+  end
+
+  def test_create_order_with_customer
+    customer = { first_name: "Jane", last_name: "Doe", email: "jane@example.com" }
+
+    stub_request(:post, "#{BASE_URL}/v1/orders/")
+      .with(body: hash_including(
+        "amount" => 1295,
+        "currency" => "EUR",
+        "customer" => hash_including("first_name" => "Jane")
+      ))
+      .to_return(status: 201, body: JSON.generate(ORDER_RESPONSE), headers: { "Content-Type" => "application/json" })
+
+    order = @client.create_order(amount: 1295, currency: "EUR", customer: customer)
+
+    assert_equal "uuid-order-1", order.id
+    assert_requested :post, "#{BASE_URL}/v1/orders/"
   end
 
   def test_order_body_includes_optional_params

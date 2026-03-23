@@ -39,6 +39,27 @@ module NoPayn
       map_order(data)
     end
 
+    # Capture a transaction via POST /v1/orders/{order_id}/transactions/{transaction_id}/captures/.
+    # @param order_id [String]
+    # @param transaction_id [String]
+    # @return [OpenStruct] updated transaction
+    def capture_transaction(order_id, transaction_id)
+      data = request(:post, "/v1/orders/#{uri_encode(order_id)}/transactions/#{uri_encode(transaction_id)}/captures/", {})
+      map_transaction(data)
+    end
+
+    # Void (partially or fully) a transaction via POST /v1/orders/{order_id}/transactions/{transaction_id}/voids/amount/.
+    # @param order_id [String]
+    # @param transaction_id [String]
+    # @param amount [Integer] void amount in cents
+    # @param description [String] optional description
+    # @return [OpenStruct] updated transaction
+    def void_transaction(order_id, transaction_id, amount:, description: "")
+      body = { amount: amount, description: description }
+      data = request(:post, "/v1/orders/#{uri_encode(order_id)}/transactions/#{uri_encode(transaction_id)}/voids/amount/", body)
+      map_transaction(data)
+    end
+
     # Issue a full or partial refund via POST /v1/orders/{id}/refunds/.
     # @param order_id [String]
     # @param amount [Integer] refund amount in cents
@@ -191,6 +212,9 @@ module NoPayn
       body[:locale]            = params[:locale]            if params[:locale]
       body[:payment_methods]   = params[:payment_methods]   if params[:payment_methods]
       body[:expiration_period] = params[:expiration_period] if params[:expiration_period]
+      body[:order_lines]       = params[:order_lines]       if params[:order_lines]
+      body[:customer]          = params[:customer]           if params[:customer]
+      body[:transactions]      = params[:transactions]      if params[:transactions]
 
       body
     end
